@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Мяубургер Кот</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      background-color: #222;
+      color: #eee;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+      cursor: url('https://iili.io/37eghmP.png'), auto;
+      /* Курсор-бургер */
+    }
+
+    .container {
+      flex-grow: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .reset-button {
+      background-color: #800;
+      color: #eee;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 16px;
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      z-index: 20;
+    }
+
+    .reset-button:hover {
+      background-color: #a00;
+    }
+
+    .tab-bar {
+      background-color: #333;
+      display: flex;
+      justify-content: space-around;
+      padding: 10px 0;
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      z-index: 10;
+    }
+
+    .tab-button {
+      color: #ddd;
+      padding: 10px 20px;
+      cursor: pointer;
+      border: none;
+      background: none;
+      font-size: 16px;
+    }
+
+    .tab-button.active {
+      color: #fff;
+      background-color: #555;
+    }
+
+    .tab-content {
+      display: none;
+      width: 100%;
+      max-width: 600px;
+      text-align: center;
+      padding: 20px;
+      box-sizing: border-box;
+    }
+
+    .tab-content.active {
+      display: block;
+    }
+
+    #cat-tab {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    #cat-tab .cat-image {
+      max-width: 200px;
+      cursor: pointer;
+      transition: transform 0.1s ease-in-out;
+      position: relative;
+    }
+
+    #cat-tab .cat-image.clicked {
+      transform: scale(0.9);
+    }
+
+    #cat-tab .meowburgers {
+      font-size: 2em;
+      margin-bottom: 20px;
+      position: relative;
+    }
+
+    #cat-tab .meowburgers .increment {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 0.8em;
+      color: #8f8;
+      opacity: 0;
+      animation: rise-and-fade 1s ease-in-out forwards;
+    }
+
+    @keyframes rise-and-fade {
+      0% {
+        transform: translate(-50%, -50%) scale(1);
+        opacity: 1;
+        top: 50%;
+      }
+
+      100% {
+        transform: translate(-50%, -100%) scale(1.5);
+        opacity: 0;
+        top: 0%;
+      }
+    }
+
+    .burger-fly {
+      position: absolute;
+      width: 60px;
+      height: 60px;
+      background-image: url('https://iili.io/37eghmP.png');
+      background-size: cover;
+      animation: burger-explosion 0.7s ease-out forwards;
+      pointer-events: none;
+    }
+
+    @keyframes burger-explosion {
+      0% {
+        opacity: 1;
+        transform: translate(var(--offsetX), var(--offsetY)) scale(1);
+      }
+
+      100% {
+        opacity: 0;
+        transform: translate(calc(var(--offsetX) + var(--randomX) * 150px), calc(var(--offsetY) + var(--randomY) * -150px)) scale(0.5);
+      }
+    }
+
+    #upgrades-tab ul,
+    #skins-tab ul {
+      list-style: none;
+      padding: 0;
+    }
+
+    #upgrades-tab li,
+    #skins-tab li {
+      background-color: #444444;
+      padding: 15px;
+      margin-bottom: 10px;
+      border-radius: 5px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    #upgrades-tab .upgrade-info {
+      flex-grow: 1;
+    }
+
+    #upgrades-tab .upgrade-controls {
+      display: flex;
+      align-items: center;
+    }
+
+    #upgrades-tab .upgrade-controls button {
+      background-color: #505050;
+      color: #eaff00;
+      border: none;
+      padding: 8px 15px;
+      border-radius: 3px;
+      cursor: pointer;
+      font-size: 14px;
+      margin-left: 5px;
+    }
+
+    #upgrades-tab .upgrade-controls button:hover {
+      background-color: #777;
+    }
+
+    #upgrades-tab .upgrade-count {
+      margin-left: 10px;
+      font-size: 14px;
+      color: #ccc;
+    }
+
+    #skins-tab ul {
+      list-style: none;
+      padding: 0;
+    }
+
+    #skins-tab li {
+      background-color: #444444;
+      padding: 15px;
+      margin-bottom: 10px;
+      border-radius: 5px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    #skins-tab button {
+      background-color: #505050;
+      color: #eaff00;
+      border: none;
+      padding: 8px 15px;
+      border-radius: 3px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+
+    #skins-tab button:hover {
+      background-color: #777;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <button id="reset-button" class="reset-button">Сбросить</button>
+    <div id="cat-tab" class="tab-content active">
+      <div class="meowburgers">
+        Мяубургеры: <span id="meowburger-count">0</span>
+      </div>
+      <img id="cat-image" class="cat-image" src="https://iili.io/37eVcpR.png" alt="Кот">
+    </div>
+
+    <div id="upgrades-tab" class="tab-content">
+      <h2>Улучшения</h2>
+      <ul id="upgrades-list">
+        <li>
+          <div class="upgrade-info">Автоматический кликер</div>
+          <div class="upgrade-controls">
+            <button data-upgrade="auto-clicker" data-cost="10">Купить</button>
+            <span class="upgrade-count" data-upgrade="auto-clicker">Куплено: 0</span>
+          </div>
+        </li>
+        <li>
+          <div class="upgrade-info">Двойной клик</div>
+          <div class="upgrade-controls">
+            <button data-upgrade="double-click" data-cost="25">Купить</button>
+            <span class="upgrade-count" data-upgrade="double-click">Куплено: 0</span>
+          </div>
+        </li>
+      </ul>
+    </div>
+
+    <div id="skins-tab" class="tab-content">
+      <h2>Скины</h2>
+      <ul id="skins-list">
+        <li>
+          <div class="skin-info">Обычный кот</div>
+          <button data-skin="default" data-cost="0" class="selected">Выбрано</button>
+        </li>
+        <li>
+          <div class="skin-info">Стильный кот (50)</div>
+          <button data-skin="stylish" data-cost="50">Купить</button>
+        </li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="tab-bar">
+    <button class="tab-button active" data-tab="cat-tab">Кот</button>
+    <button class="tab-button" data-tab="upgrades-tab">Апгрейд</button>
+    <button class="tab-button" data-tab="skins-tab">Скины</button>
+  </div>
+
+  <script>
+    const meowburgerCountElement = document.getElementById('meowburger-count');
+    const catImage = document.getElementById('cat-image');
+    const catTab = document.getElementById('cat-tab');
+    const meowburgersContainer = document.querySelector('#cat-tab .meowburgers');
+    const tabButtons = document.querySelectorAll('.tab-button');
+    const tabContents = document.querySelectorAll('.tab-content');
+    const upgradesList = document.getElementById('upgrades-list');
+    const skinsList = document.getElementById('skins-list');
+    const resetButton = document.getElementById('reset-button');
+    const container = document.querySelector('.container');
+
+    let meowburgers = 0;
+    let clickPower = 1;
+    let autoClickerInterval;
+    let autoClickerPower = 0;
+    let currentSkin = 'default';
+    let defaultCatImageSrc = 'https://iili.io/37eVcpR.png';
+
+    // Объект для хранения количества купленных апгрейдов
+    const upgradeCounts = {
+      'auto-clicker': 0,
+      'double-click': 0
+    };
+
+    // Объект для хранения лимитов покупок апгрейдов
+    const upgradeLimits = {
+      'auto-clicker': 100,
+      'double-click': 100
+    };
+
+    function updateMeowburgerCount() {
+      meowburgerCountElement.textContent = meowburgers;
+    }
+
+    function handleCatClick(event) {
+      meowburgers += clickPower;
+      updateMeowburgerCount();
+
+      const containerRect = container.getBoundingClientRect();
+      const centerX = containerRect.left + containerRect.width / 2;
+      const centerY = containerRect.top + containerRect.height / 2;
+
+      for (let i = 0; i < clickPower; i++) {
+        const burger = document.createElement('div');
+        burger.classList.add('burger-fly');
+        container.appendChild(burger);
+
+        const randomAngle = Math.random() * 360;
+        const randomX = Math.cos(randomAngle * Math.PI / 180);
+        const randomY = Math.sin(randomAngle * Math.PI / 180);
+
+        burger.style.setProperty('--offsetX', `${event.clientX - 30}px`); // Позиция клика
+        burger.style.setProperty('--offsetY', `${event.clientY - 30}px`);
+        burger.style.setProperty('--randomX', randomX);
+        burger.style.setProperty('--randomY', randomY);
+
+        burger.addEventListener('animationend', () => {
+          burger.remove();
+        });
+      }
+
+      const incrementElement = document.createElement('div');
+      incrementElement.classList.add('increment');
+      incrementElement.textContent = `+${clickPower}`;
+      meowburgersContainer.appendChild(incrementElement);
+      incrementElement.addEventListener('animationend', () => {
+        incrementElement.remove();
+      });
+
+      catImage.classList.add('clicked');
+      setTimeout(() => {
+        catImage.classList.remove('clicked');
+      }, 100);
+    }
+
+    function showTab(tabId) {
+      tabContents.forEach(content => content.classList.remove('active'));
+      tabButtons.forEach(button => button.classList.remove('active'));
+      document.getElementById(tabId).classList.add('active');
+      document.querySelector(`.tab-button[data-tab="${tabId}"]`).classList.add('active');
+    }
+
+    tabButtons.forEach(button => {
+      button.addEventListener('click', () => {
+        const tabId = button.getAttribute('data-tab');
+        showTab(tabId);
+      });
+    });
+
+    catImage.addEventListener('click', handleCatClick);
+
+    upgradesList.addEventListener('click', (event) => {
+      if (event.target.tagName === 'BUTTON') {
+        const button = event.target;
+        const upgrade = button.getAttribute('data-upgrade');
+        const cost = parseInt(button.getAttribute('data-cost'));
+        const upgradeCountElement = upgradesList.querySelector(`.upgrade-count[data-upgrade="${upgrade}"]`);
+
+        if (upgradeCounts[upgrade] < upgradeLimits[upgrade] && meowburgers >= cost) {
+          meowburgers -= cost;
+          updateMeowburgerCount();
+          upgradeCounts[upgrade]++;
+          upgradeCountElement.textContent = `Куплено: ${upgradeCounts[upgrade]}`;
+
+          // Обновление состояния кнопки
+          if (upgradeCounts[upgrade] >= upgradeLimits[upgrade]) {
+            button.disabled = true;
+            button.textContent = 'Максимум';
+          } else {
+            // Вы можете сделать стоимость апгрейда динамической здесь, если хотите
+            button.textContent = `Купить (${cost})`;
+          }
+
+          if (upgrade === 'auto-clicker') {
+            autoClickerPower += 1;
+            if (!autoClickerInterval) {
+              autoClickerInterval = setInterval(() => {
+                meowburgers += autoClickerPower;
+                const autoIncrementElement = document.createElement('div');
+                autoIncrementElement.classList.add('increment');
+                autoIncrementElement.textContent = `+${autoClickerPower}`;
+                meowburgersContainer.appendChild(autoIncrementElement);
+                autoIncrementElement.addEventListener('animationend', () => {
+                  autoIncrementElement.remove();
+                });
+                updateMeowburgerCount();
+              }, 1000);
+            }
+          } else if (upgrade === 'double-click') {
+            clickPower *= 2;
+          }
+        } else if (upgradeCounts[upgrade] >= upgradeLimits[upgrade]) {
+          alert('Максимальное количество улучшений куплено!');
+        } else {
+          alert('Недостаточно мяубургеров!');
+        }
+      }
+    });
+
+    skinsList.addEventListener('click', (event) => {
+      if (event.target.tagName === 'BUTTON') {
+        const skin = event.target.getAttribute('data-skin');
+        const cost = parseInt(event.target.getAttribute('data-cost'));
+        const currentSelected = skinsList.querySelector('.selected');
+
+        if (skin === currentSkin) return;
+
+        if (meowburgers >= cost) {
+          if (skin !== 'default') {
+            meowburgers -= cost;
+            updateMeowburgerCount();
+          }
+
+          if (currentSelected) {
+            currentSelected.textContent = `Купить (${currentSelected.getAttribute('data-cost')})`;
+            currentSelected.classList.remove('selected');
+          }
+
+          event.target.textContent = 'Выбрано';
+          event.target.classList.add('selected');
+          currentSkin = skin;
+          if (currentSkin === 'stylish') {
+            catImage.src = 'https://iili.io/37PDoL7.md.png';
+          } else {
+            catImage.src = defaultCatImageSrc;
+          }
+        } else {
+          alert('Недостаточно мяубургеров для этого скина!');
+        }
+      }
+    });
+
+    function resetGame() {
+      meowburgers = 0;
+      clickPower = 1;
+      clearInterval(autoClickerInterval);
+      autoClickerInterval = null;
+      autoClickerPower = 0;
+      currentSkin = 'default';
+      updateMeowburgerCount();
+      catImage.src = defaultCatImageSrc;
+
+      // Сброс счетчиков апгрейдов
+      for (const upgrade in upgradeCounts) {
+        upgradeCounts[upgrade] = 0;
+        const upgradeCountElement = upgradesList.querySelector(`.upgrade-count[data-upgrade="${upgrade}"]`);
+        if (upgradeCountElement) {
+          upgradeCountElement.textContent = 'Куплено: 0';
+        }
+      }
+
+      const upgradeButtons = upgradesList.querySelectorAll('button');
+      upgradeButtons.forEach(button => {
+        button.disabled = false;
+        const cost = button.getAttribute('data-cost');
+        button.textContent = `Купить (${cost})`;
+      });
+
+      const skinButtons = skinsList.querySelectorAll('button');
+      skinButtons.forEach(button => {
+        button.classList.remove('selected');
+        const skin = button.getAttribute('data-skin');
+        const cost = button.getAttribute('data-cost');
+        button.textContent = `Купить (${cost})`;
+        if (skin === 'default') {
+          button.textContent = 'Выбрано';
+          button.classList.add('selected');
+        }
+      });
+    }
+
+    resetButton.addEventListener('click', resetGame);
+
+    // Начальное обновление счетчика
+    updateMeowburgerCount();
+  </script>
+</body>
+
+</html>
